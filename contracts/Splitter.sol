@@ -35,7 +35,7 @@ contract Splitter{
         uint bobAmount=msg.value/2;
         uint carolAmount=msg.value-bobAmount;
         _bobBalance+=bobAmount;
-        _carolBalance=carolAmount;
+        _carolBalance+=carolAmount;
         
         // send
         _bob.transfer(bobAmount);

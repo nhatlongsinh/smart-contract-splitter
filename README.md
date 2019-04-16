@@ -4,4 +4,4 @@ Solidity Smart Contract -Splitter
 
 # Testing
 
-truffle tests
+truffle test

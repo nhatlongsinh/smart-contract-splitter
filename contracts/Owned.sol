@@ -35,6 +35,6 @@ contract Owned {
   {
     require(_owner != newOwner && newOwner != address(0x0));
     _owner = newOwner;
-    emit ChangeOwnerEvent(msg.sender, _owner);
+    emit ChangeOwnerEvent(msg.sender, newOwner);
   }
 }

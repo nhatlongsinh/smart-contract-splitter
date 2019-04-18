@@ -10,8 +10,8 @@ contract Pausable is Owned {
   event SwitchRunningEvent(bool oldValue, bool newValue);
 
   // constructor
-  constructor() public {
-    _isRunning = true;
+  constructor(bool isRunning) public {
+    _isRunning = isRunning;
   }
 
   // modifier
@@ -32,6 +32,6 @@ contract Pausable is Owned {
   {
     bool oldValue = _isRunning;
     _isRunning = running;
-    emit SwitchRunningEvent(oldValue, _isRunning);
+    emit SwitchRunningEvent(oldValue, running);
   }
 }

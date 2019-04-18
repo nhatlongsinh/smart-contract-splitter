@@ -1,14 +1,25 @@
 pragma solidity >=0.4.21 <0.6.0;
 
 import './Pausable.sol';
+import './SafeMath.sol';
 
 contract Splitter is Pausable {
+    // library
+    using SafeMath for uint;
+
     // balance
     mapping(address => uint) private _balanceOf;
+
+    // constructor
+    constructor(bool isRunning)
+        public
+        Pausable(isRunning)
+        {}
 
     // event
     event SplitEvent(
         address indexed from,
+        uint amount,
         address indexed receiver1,
         address indexed receiver2
     );
@@ -33,27 +44,27 @@ contract Splitter is Pausable {
     )
         public
         payable
-        ownerOnly
         runningOnly
     {
         require(receiver1 != address(0x0) && receiver2 != address(0x0));
         // get haft
-        uint half = msg.value / 2;
+        uint half = msg.value.div(2);
 
         // record balances
-        _balanceOf[receiver1] += half;
-        _balanceOf[receiver2] += half;
+        _balanceOf[receiver1] = _balanceOf[receiver1].add(half);
+        _balanceOf[receiver2] = _balanceOf[receiver2].add(half);
         
         // odd number, return the change.
-        if(msg.value % 2 > 0) msg.sender.transfer(1);
+        if(msg.value.mod(2) > 0) msg.sender.transfer(1);
 
         // emit event
-        emit SplitEvent(msg.sender, receiver1, receiver2);
+        emit SplitEvent(msg.sender, msg.value, receiver1, receiver2);
     }
 
     // withdraw
     function withdraw()
         public
+        runningOnly
     {
         uint balance = _balanceOf[msg.sender];
 

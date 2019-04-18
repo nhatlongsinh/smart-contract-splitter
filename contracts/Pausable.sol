@@ -4,7 +4,7 @@ import './Owned.sol';
 
 contract Pausable is Owned {
   // is running
-  bool _isRunning;
+  bool private _isRunning;
 
   // event
   event SwitchRunningEvent(bool oldValue, bool newValue);
@@ -20,6 +20,11 @@ contract Pausable is Owned {
     _;
   }
   
+  // getter
+  function isRunning() public view returns (bool) {
+    return _isRunning;
+  }
+
   // set running
   function switchRunning(bool running)
     public

@@ -28,7 +28,7 @@ contract("Splitter", accounts => {
   };
 
   beforeEach(async () => {
-    instance = await MyContract.new(bob, carol, { from: owner });
+    instance = await MyContract.new({ from: owner });
   });
 
   // owner test
@@ -59,17 +59,9 @@ contract("Splitter", accounts => {
     assert.equal(event.newValue, false, "it should change pausable to false");
   });
 
-  // test divide function
-  it("should allow owner to split", async () => {
-    const result = await instance.safeDivide.call(amountWei);
-    // test
-    assert.equal(result[0], amount1);
-    assert.equal(result[1], amount2);
-  });
-
   // owner can call split
   it("should allow owner to split", async () => {
-    const txObj = await instance.split({
+    const txObj = await instance.split(bob, carol, {
       from: owner,
       value: amountWei
     });
@@ -80,17 +72,15 @@ contract("Splitter", accounts => {
     assert.notEqual(event, undefined, "it should emit SplitEvent");
     // owner changed
     assert.equal(event.from, owner);
-    assert.equal(event.bob, bob);
-    assert.equal(event.amountBob, amount1);
-    assert.equal(event.carol, carol);
-    assert.equal(event.amountCarol, amount2);
+    assert.equal(event.receiver1, bob);
+    assert.equal(event.receiver2, carol);
   });
 
   it("should allow bob to withdraw", async () => {
     // initial balance
     const bobBalance = await web3.eth.getBalance(bob);
     // execute split function
-    const txSplit = await instance.split({
+    const txSplit = await instance.split(bob, carol, {
       from: owner,
       value: amountWei
     });

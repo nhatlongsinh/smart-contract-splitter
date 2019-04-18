@@ -3,40 +3,19 @@ pragma solidity >=0.4.21 <0.6.0;
 import './Pausable.sol';
 
 contract Splitter is Pausable {
-    // addresses
-    // address must be payable in order to call transfer function
-    // https://solidity.readthedocs.io/en/v0.5.0/050-breaking-changes.html#explicitness-requirements
-    address payable public _bob;
-    address payable public _carol;
-    
     // balance
-    mapping(address=>uint) private _balanceOf;
+    mapping(address => uint) private _balanceOf;
 
     // event
     event SplitEvent(
-        address from,
-        address bob,
-        uint amountBob,
-        address carol,
-        uint amountCarol
+        address indexed from,
+        address indexed receiver1,
+        address indexed receiver2
     );
     event WithdrawEvent(
         address indexed receiver,
         uint amount
     );
-
-    // constructor
-    constructor(
-        address payable bob,
-        address payable carol
-    )
-    public
-    {
-        require(bob != address(0x0) && carol != address(0x0));
-
-        _bob = bob;
-        _carol = carol;
-    }
 
     // check balance
     function balanceOf(address a)
@@ -48,20 +27,28 @@ contract Splitter is Pausable {
     }
     
     // Split
-    function split()
+    function split(
+        address payable receiver1,
+        address payable receiver2
+    )
         public
         payable
         ownerOnly
         runningOnly
     {
-        (uint amountBob, uint amountCarol) = safeDivide(msg.value);
+        require(receiver1 != address(0x0) && receiver2 != address(0x0));
+        // get haft
+        uint half = msg.value / 2;
 
         // record balances
-        _balanceOf[_bob] += amountBob;
-        _balanceOf[_carol] += amountCarol;
+        _balanceOf[receiver1] += half;
+        _balanceOf[receiver2] += half;
+        
+        // odd number, return the change.
+        if(msg.value % 2 > 0) msg.sender.transfer(1);
 
         // emit event
-        emit SplitEvent(msg.sender,_bob, amountBob,_carol, amountCarol);
+        emit SplitEvent(msg.sender, receiver1, receiver2);
     }
 
     // withdraw
@@ -81,18 +68,5 @@ contract Splitter is Pausable {
 
         // event
         emit WithdrawEvent(msg.sender, balance);
-    }
-
-    // safe divide amount
-    function safeDivide(uint amount)
-        public
-        pure
-        returns(uint amount1, uint amount2)
-    {
-        require(amount > 0);
-
-        // calculate
-        amount1 = amount / 2;
-        amount2 = amount - amount1;
     }
 }

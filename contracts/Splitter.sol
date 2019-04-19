@@ -53,12 +53,12 @@ contract Splitter is Pausable {
         // record balances
         _balanceOf[receiver1] = _balanceOf[receiver1].add(half);
         _balanceOf[receiver2] = _balanceOf[receiver2].add(half);
-        
-        // odd number, return the change.
-        if(msg.value.mod(2) > 0) msg.sender.transfer(1);
 
         // emit event
         emit SplitEvent(msg.sender, msg.value, receiver1, receiver2);
+        
+        // odd number, return the change.
+        if(msg.value.mod(2) > 0) msg.sender.transfer(1);
     }
 
     // withdraw
@@ -74,10 +74,10 @@ contract Splitter is Pausable {
         // set balance to zero
         _balanceOf[msg.sender] = 0;
 
-        // transfer
-        msg.sender.transfer(balance);
-
         // event
         emit WithdrawEvent(msg.sender, balance);
+
+        // transfer
+        msg.sender.transfer(balance);
     }
 }

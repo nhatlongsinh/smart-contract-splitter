@@ -1,6 +1,8 @@
 const Splitter = artifacts.require("./Splitter.sol");
 
 contract("Splitter", accounts => {
+  // big number
+  const toBN = web3.utils.toBN;
   // prepare mock data
   // contract
   let instance;
@@ -8,8 +10,8 @@ contract("Splitter", accounts => {
   const [owner, bob, carol, newAddress] = accounts;
   // split amount
   const amountEther = "0.2";
-  const amountWei = Number(web3.utils.toWei(amountEther));
-  const amount1 = amountWei / 2;
+  const amountWei = toBN(web3.utils.toWei(amountEther));
+  const amount1 = amountWei.div(toBN(2));
   // gas price
   const gasPrice = 1000;
 
@@ -93,7 +95,7 @@ contract("Splitter", accounts => {
 
   it("should allow bob to withdraw", async () => {
     // initial balance
-    const bobBalance = Number(await web3.eth.getBalance(bob));
+    const bobBalance = toBN(await web3.eth.getBalance(bob));
     // execute split function
     const txSplit = await instance.split(bob, carol, {
       from: owner,
@@ -103,28 +105,34 @@ contract("Splitter", accounts => {
     assert.isTrue(txSplit.receipt.status, "transaction status must be true");
     // execute withdraw function
     const txObj = await instance.withdraw({
-      from: bob,
-      gasPrice
+      from: bob
     });
+    // get transaction gas price
+    const tx = await web3.eth.getTransaction(txObj.tx);
+    const gasPrice = toBN(tx.gasPrice);
     // transaction cost
-    const txCost = txObj.receipt.gasUsed * gasPrice;
+    const txCost = toBN(txObj.receipt.gasUsed).mul(gasPrice);
     // transaction status must be true
     assert.isTrue(txObj.receipt.status, "transaction status must be true");
 
     //new balance
-    const bobBalanceNew = Number(await web3.eth.getBalance(bob));
+    const bobBalanceNew = toBN(await web3.eth.getBalance(bob));
 
     // calculate received amount
-    const bobReceived = bobBalanceNew - bobBalance + txCost;
+    const bobReceived = bobBalanceNew.add(txCost).sub(bobBalance);
 
     // test amount received must be correct
-    assert.strictEqual(amount1, bobReceived, "bob should received " + amount1);
+    assert.strictEqual(
+      amount1.toString(),
+      bobReceived.toString(),
+      "bob should received " + amount1
+    );
 
     // check event
     const event = getEventResult(txObj, "WithdrawEvent");
     assert.isDefined(event, "it should emit WithdrawEvent");
     // owner changed
     assert.strictEqual(event.receiver, bob);
-    assert.strictEqual(event.amount, amount1);
+    assert.strictEqual(event.amount.toString(), amount1.toString());
   });
 });

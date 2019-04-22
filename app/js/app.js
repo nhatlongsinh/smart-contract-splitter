@@ -175,8 +175,9 @@ const App = {
     return this.web3.utils.isAddress(this.account);
   },
   checkMetamaskAccount: function() {
+    $("#txtAddress").val(this.account || "");
     // hide/show UI base on metamask account
-    if (this.isMetamaskLogin(this.account)) {
+    if (this.isMetamaskLogin()) {
       this.hideAlert();
       this.enableApp(true);
       // get account splitter fund
@@ -186,6 +187,12 @@ const App = {
         .call()
         .then(balance => {
           $("#txtBalance").val(this.web3.utils.fromWei(balance.toString()));
+          // hide/show btn
+          if (balance > 0) {
+            $("#btnWithdraw").prop("disabled", false);
+          } else {
+            $("#btnWithdraw").prop("disabled", true);
+          }
         });
     } else {
       this.enableApp(false);

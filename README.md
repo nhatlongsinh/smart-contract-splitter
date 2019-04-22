@@ -11,3 +11,7 @@ truffle test
 npm run dev
 
 App allow user to interact with Splitter contract.
+
+# Migrate before run the front end
+
+truffle migrate

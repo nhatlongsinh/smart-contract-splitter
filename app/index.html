@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <link
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T"
+      crossorigin="anonymous"
+    />
+    <title>Document</title>
+  </head>
+  <body class="container">
+    <h1>Splitter</h1>
+    <div id="alertContainer" class="alert" style="display:none">
+      <strong>Success!</strong> You should
+      <a href="#" class="alert-link">read this message</a>.
+    </div>
+    <div id="myApp" class="row">
+      <div class="col-8">
+        <div class="card">
+          <div class="card-header">Split Your Ether</div>
+          <div class="card-body">
+            <forn>
+              <div class="form-group">
+                <label class="control-label" for="amount">Amount</label>
+                <input
+                  id="txtAmount"
+                  type="number"
+                  class="form-control"
+                  min="0"
+                  value="0"
+                  placeholder="Split Amount"
+                  required
+                  value="1"
+                />
+              </div>
+              <div class="form-group">
+                <label for="receiver1" class="control-label">Receiver 1</label
+                ><input
+                  type="text"
+                  class="form-control"
+                  id="txtReceiver1"
+                  placeholder="Address 1"
+                  required
+                  value="0x23bBC27C35F8b122DB6F3926F070220Ad3260946"
+                />
+              </div>
+              <div class="form-group">
+                <label for="receiver2" class="control-label">Receiver 2</label
+                ><input
+                  type="text"
+                  class="form-control"
+                  id="txtReceiver2"
+                  placeholder="Address 2"
+                  required
+                  value="0x9B0Fc8fc5f618e893feE7a52dE22dd2daBb2BB43"
+                />
+              </div>
+              <button type="button" id="btnSplit" class="btn btn-primary">
+                Split
+              </button>
+            </forn>
+          </div>
+        </div>
+
+        <div id="splitStatus" class="alert alert-info"></div>
+      </div>
+      <div class="col-4">
+        <div class="card">
+          <div class="card-header">Your Splitter Fund</div>
+          <div class="card-body">
+            <form>
+              <div class="form-group">
+                <label for="balance" class="control-label"></label
+                ><input
+                  type="text"
+                  class="form-control"
+                  id="txtBalance"
+                  disabled="disabled"
+                />
+              </div>
+              <button type="button" id="btnWithdraw" class="btn btn-primary">
+                Withdraw
+              </button>
+            </form>
+          </div>
+        </div>
+        <div id="withdrawStatus" class="alert alert-info"></div>
+      </div>
+    </div>
+    <script src="app.js"></script>
+  </body>
+</html>

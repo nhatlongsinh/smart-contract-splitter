@@ -2,15 +2,15 @@ const Splitter = artifacts.require("./Splitter.sol");
 
 contract("Splitter", accounts => {
   // big number
-  const toBN = web3.utils.toBN;
+  const { toBN, toWei } = web3.utils;
   // prepare mock data
   // contract
   let instance;
   // addresses
-  const [owner, bob, carol, newAddress] = accounts;
+  const [owner, bob, carol, newAddress, unauthorized] = accounts;
   // split amount
   const amountEther = "0.2";
-  const amountWei = toBN(web3.utils.toWei(amountEther));
+  const amountWei = toBN(toWei(amountEther));
   const amount1 = amountWei.div(toBN(2));
   // gas price
   const gasPrice = 1000;
@@ -134,5 +134,13 @@ contract("Splitter", accounts => {
     // owner changed
     assert.strictEqual(event.receiver, bob);
     assert.strictEqual(event.amount.toString(), amount1.toString());
+  });
+
+  // change owner forbidden
+  it("should not allow unauthorized account to change owner address", async () => {
+    // VM should return revert error
+    await instance.changeOwner(newAddress, {
+      from: unauthorized
+    });
   });
 });

@@ -1,4 +1,5 @@
 const Splitter = artifacts.require("./Splitter.sol");
+const expectedExceptionPromise = require("./expected_exception_testRPC_and_geth.js");
 
 contract("Splitter", accounts => {
   // big number
@@ -12,8 +13,8 @@ contract("Splitter", accounts => {
   const amountEther = "0.2";
   const amountWei = toBN(toWei(amountEther));
   const amount1 = amountWei.div(toBN(2));
-  // gas price
-  const gasPrice = 1000;
+  // gas max
+  const maxGas = 3000000;
 
   // test helper
   // get event result
@@ -137,10 +138,24 @@ contract("Splitter", accounts => {
   });
 
   // change owner forbidden
-  it("should not allow unauthorized account to change owner address", async () => {
+  it("should not allow unauthorized account to change owner address", () => {
     // VM should return revert error
-    await instance.changeOwner(newAddress, {
-      from: unauthorized
-    });
+    return expectedExceptionPromise(function() {
+      return instance.changeOwner(newAddress, {
+        from: unauthorized,
+        gas: maxGas
+      });
+    }, maxGas);
+  });
+
+  // pause contract forbidden
+  it("should not allow unauthorized account to pause contract", () => {
+    // VM should return revert error
+    return expectedExceptionPromise(function() {
+      return instance.switchRunning(false, {
+        from: unauthorized,
+        gas: maxGas
+      });
+    }, maxGas);
   });
 });

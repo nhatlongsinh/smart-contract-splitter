@@ -3281,7 +3281,7 @@
   },
   "networks": {},
   "schemaVersion": "3.0.3",
-  "updatedAt": "2019-04-22T04:38:21.304Z",
+  "updatedAt": "2019-04-23T02:28:33.400Z",
   "devdoc": {
     "details": "Math operations with safety checks that revert on error https://raw.githubusercontent.com/OpenZeppelin/openzeppelin-solidity/v2.0.0/contracts/math/SafeMath.sol",
     "methods": {},

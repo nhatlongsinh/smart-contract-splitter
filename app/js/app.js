@@ -1,26 +1,36 @@
 const $ = require("jquery");
 const Web3 = require("web3");
-const Promise = require("bluebird");
 const splitterArtifact = require("../../build/contracts/Splitter.json");
+const truffleContract = require("truffle-contract");
+
+// gas max
+const maxGas = 3000000;
 
 const App = {
   web3: null,
   splitter: null,
   account: null,
+  currentProvider: null,
   startApp: async function() {
     try {
       const { web3 } = this;
       // get contract instance
       const networkId = await web3.eth.net.getId();
-      const deployedNetwork = splitterArtifact.networks[networkId];
-      console.log(networkId, deployedNetwork);
-      this.splitter = new web3.eth.Contract(
-        splitterArtifact.abi,
-        deployedNetwork.address
-      );
+      const SplitterContract = truffleContract(splitterArtifact);
+      SplitterContract.setProvider(this.currentProvider);
+
+      this.splitter = await SplitterContract.deployed();
+      console.log(networkId, this.splitter);
+      // console.log(networkId, SplitterContract);
+      // const deployedNetwork = splitterArtifact.networks[networkId];
+      // console.log(networkId, deployedNetwork);
+      // this.splitter = new web3.eth.Contract(
+      //   splitterArtifact.abi,
+      //   deployedNetwork.address
+      // );
       const accounts = await web3.eth.getAccounts();
       //check if metamask locked
-      if (accounts.length) {
+      if (accounts.length > 0) {
         this.account = accounts[0];
       }
       // check metamask
@@ -28,7 +38,7 @@ const App = {
       // init app events
       this.addAppEvent();
     } catch (error) {
-      console.error("Could not connect to contract or chain.");
+      console.error("Could not connect to contract or chain. " + error);
     }
   },
   submitSplit: function() {
@@ -55,22 +65,21 @@ const App = {
       enableApp(true);
     } else {
       const amountWei = web3.utils.toWei(amount);
-      const { split } = this.splitter.methods;
+      const { split } = this.splitter;
       // test call first
-      this.splitter.methods
-        .split(receiver1, receiver2)
-        .call({
+      split
+        .call(receiver1, receiver2, {
           from: this.account,
           value: amountWei
         })
         .then(() => {
           // Ok, we move onto the real action.
           return (
-            split(receiver1, receiver2)
-              .send({
-                from: this.account,
-                value: amountWei
-              })
+            split(receiver1, receiver2, {
+              from: this.account,
+              value: amountWei,
+              gas: maxGas
+            })
               // .split takes time in real life, so we get the txHash immediately while it
               // is mined.
               .on("transactionHash", txHash =>
@@ -81,7 +90,9 @@ const App = {
               })
           );
         })
-        .then(receipt => {
+        // tx mined
+        .then(txObj => {
+          const receipt = txObj.receipt;
           console.log("got receipt", receipt);
           if (!receipt.status) {
             console.error("Wrong status");
@@ -89,14 +100,14 @@ const App = {
             $("#splitStatus").html(
               "There was an error in the tx execution, status not 1"
             );
-          } else if (receipt.events.length == 0) {
+          } else if (receipt.logs.length == 0) {
             console.error("Empty events");
             console.error(receipt);
             $("#splitStatus").html(
               "There was an error in the tx execution, missing expected event"
             );
           } else {
-            console.log(receipt.events[0]);
+            console.log(receipt.logs[0]);
             $("#splitStatus").html("Transfer executed");
           }
         })
@@ -108,19 +119,19 @@ const App = {
   withdrawFund: function() {
     const { web3, displayAlert, hideAlert } = this;
     hideAlert();
-    const { withdraw } = this.splitter.methods;
+    const { withdraw } = this.splitter;
     // test call first
-    withdraw()
+    withdraw
       .call({
         from: this.account
       })
       .then(() => {
         // Ok, we move onto the real action.
         return (
-          withdraw()
-            .send({
-              from: this.account
-            })
+          withdraw({
+            from: this.account,
+            gas: maxGas
+          })
             // .withdraw takes time in real life, so we get the txHash immediately while it
             // is mined.
             .on("transactionHash", txHash => {
@@ -134,7 +145,9 @@ const App = {
             })
         );
       })
-      .then(receipt => {
+      // tx mined
+      .then(txObj => {
+        const receipt = txObj.receipt;
         console.log("got receipt", receipt);
         if (!receipt.status) {
           console.error("Wrong status");
@@ -142,14 +155,14 @@ const App = {
           $("#withdrawStatus").html(
             "There was an error in the tx execution, status not 1"
           );
-        } else if (receipt.events.length == 0) {
+        } else if (receipt.logs.length == 0) {
           console.error("Empty events");
           console.error(receipt);
           $("#withdrawStatus").html(
             "There was an error in the tx execution, missing expected event"
           );
         } else {
-          console.log(receipt.events[0]);
+          console.log(receipt.logs[0]);
           $("#withdrawStatus").html("Transfer executed");
         }
       })
@@ -181,19 +194,17 @@ const App = {
       this.hideAlert();
       this.enableApp(true);
       // get account splitter fund
-      const { balanceOf } = this.splitter.methods;
+      const { balanceOf } = this.splitter;
       // get balance and update
-      balanceOf(this.account)
-        .call()
-        .then(balance => {
-          $("#txtBalance").val(this.web3.utils.fromWei(balance.toString()));
-          // hide/show btn
-          if (balance > 0) {
-            $("#btnWithdraw").prop("disabled", false);
-          } else {
-            $("#btnWithdraw").prop("disabled", true);
-          }
-        });
+      balanceOf.call(this.account).then(balance => {
+        $("#txtBalance").val(this.web3.utils.fromWei(balance.toString()));
+        // hide/show btn
+        if (balance > 0) {
+          $("#btnWithdraw").prop("disabled", false);
+        } else {
+          $("#btnWithdraw").prop("disabled", true);
+        }
+      });
     } else {
       this.enableApp(false);
       this.displayAlert(
@@ -215,7 +226,6 @@ const App = {
 
     // metamask account change event
     window.ethereum.on("accountsChanged", function(accounts) {
-      console.log("YES");
       App.account = accounts[0];
       App.checkMetamaskAccount();
     });
@@ -235,7 +245,13 @@ window.addEventListener("load", () => {
       new Web3.providers.HttpProvider("http://localhost:7545")
     );
   }
+  App.currentProvider = web3.currentProvider;
 
+  // const SplitterContract = truffleContract(splitterArtifact);
+  // SplitterContract.setProvider(web3.currentProvider);
+  // SplitterContract.deployed()
+  //   .then(deployed => console.log(deployed))
+  //   .catch(console.error);
   // Now you can start your app & access web3 freely:
   App.startApp();
 });
